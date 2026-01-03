@@ -35,9 +35,9 @@ const db = mysql.createPool({
    ====================== */
 db.getConnection((err, connection) => {
   if (err) {
-    console.error("❌ DB connection failed:", err);
+    console.error(" DB connection failed:", err);
   } else {
-    console.log("✅ DB connected successfully");
+    console.log(" DB connected successfully");
     connection.release();
   }
 });
@@ -80,7 +80,7 @@ const upload = multer({
    ====================== */
 
 app.get("/", (req, res) => {
-  res.send("Backend is running 🚀");
+  res.send("Backend is running ");
 });
 
 app.get("/api/test", (req, res) => {
@@ -132,6 +132,33 @@ app.get("/products", (req, res) => {
     );
   });
 });
+app.post("/products", upload.single("image"), (req, res) => {
+  const { name, price, description } = req.body;
+
+  if (!name || !price || !req.file) {
+    return res.status(400).json({
+      message: "Name, price, and image are required",
+    });
+  }
+
+  const imageName = req.file.filename;
+
+  const q =
+    "INSERT INTO products (name, price, description, image) VALUES (?, ?, ?, ?)";
+
+  db.query(q, [name, price, description || "", imageName], (err, result) => {
+    if (err) {
+      console.error("Insert product error:", err);
+      return res.status(500).json({ message: "Failed to add product" });
+    }
+
+    res.status(201).json({
+      message: "Product added successfully",
+      productId: result.insertId,
+    });
+  });
+});
+
 
 /* ======================
    ERROR HANDLER
