@@ -30,9 +30,8 @@ const db = mysql.createPool({
   connectionLimit: 10,
 });
 
-/* ======================
-   TEST DB CONNECTION
-   ====================== */
+/*
+   TEST DB CONNECTION*/
 db.getConnection((err, connection) => {
   if (err) {
     console.error(" DB connection failed:", err);
@@ -42,9 +41,6 @@ db.getConnection((err, connection) => {
   }
 });
 
-/* ======================
-   FILE STORAGE
-   ====================== */
 const imagesDir = path.join(__dirname, "images");
 if (!fs.existsSync(imagesDir)) {
   fs.mkdirSync(imagesDir, { recursive: true });
@@ -75,9 +71,7 @@ const upload = multer({
   },
 });
 
-/* ======================
-   ROUTES
-   ====================== */
+/* ROUTES*/
 
 app.get("/", (req, res) => {
   res.send("Backend is running ");
@@ -158,18 +152,42 @@ app.post("/products", upload.single("image"), (req, res) => {
     });
   });
 });
+app.delete("/products/:id", (req, res) => {
+  const { id } = req.params;
+
+  
+  db.query("SELECT image FROM products WHERE id = ?", [id], (err, rows) => {
+    if (err || rows.length === 0) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const imageName = rows[0].image;
+    const imagePath = path.join(__dirname, "images", imageName);
+
+    // delete product from DB
+    db.query("DELETE FROM products WHERE id = ?", [id], (err) => {
+      if (err) {
+        return res.status(500).json({ message: "Failed to delete product" });
+      }
+
+      // delete image file 
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+
+      res.json({ message: "Product deleted successfully" });
+    });
+  });
+});
 
 
-/* ======================
-   ERROR HANDLER
-   ====================== */
+
+
 app.use((err, req, res, next) => {
   res.status(500).json({ message: err.message || "Server error" });
 });
 
-/* ======================
-   START SERVER
-   ====================== */
+/* START SERVER*/
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
