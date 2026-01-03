@@ -14,6 +14,15 @@ app.use((req, res, next) => {
   next();
 });
 
+db.getConnection((err, connection) => {
+  if (err) {
+    console.error("❌ DB connection failed:", err);
+  } else {
+    console.log("✅ DB connected successfully");
+    connection.release();
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
