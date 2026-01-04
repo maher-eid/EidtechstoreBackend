@@ -16,7 +16,7 @@ app.use((req, res, next) => {
 });
 
 const PORT = process.env.PORT || 8080;
-const BASE_URL = process.env.BASE_URL || "";
+const BASE_URL = process.env.BASE_URL || "https://gleaming-wisdom-production.up.railway.app";
 
 /* ======================
    MYSQL CONNECTION (FIRST)
@@ -121,7 +121,7 @@ app.get("/products", (req, res) => {
     res.json(
       data.map((p) => ({
         ...p,
-        image: `${BASE_URL}/images/${p.image}`,
+        image: p.image.startsWith('http') ? p.image : `${BASE_URL}/images/${p.image}`,
       }))
     );
   });
